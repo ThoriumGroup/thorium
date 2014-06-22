@@ -2,11 +2,11 @@
 Thorium
 =======
 
-Thorium is a project that combines various python modules and tools originally
-sourced from Nukepedia. It provides a streamlined way of managing their
-versions and  customizing the installation. While thorium ships as a complete
-package, individual submodules can be activated and deactivated via config
-files or arguments passed to thorium.
+Thorium combines various python modules and tools originally sourced from
+Nukepedia. It provides a streamlined way of managing their versions and
+customizing the installation. While thorium ships as a complete package,
+individual submodules can be activated and deactivated via config files or
+arguments passed to thorium.
 
 ## Installation
 
