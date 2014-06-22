@@ -40,19 +40,12 @@ The following should be placed in your project module's __init__.py file:
 
 Note: At this time `credits` is unused.
 
-## Assumptions
-
-As this is a simplified setup.py script, it expects a relatively simple module.
-It assumes that your `module_name` is the same as the name of your package, and
-that there's only one. More complicated modules with multiple packages will
-have to modify this script more heavily.
-
 """
 # ==============================================================================
 # IMPORTS
 # ==============================================================================
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import codecs
 import os
 import re
@@ -214,7 +207,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages.
-    packages=[str(metadata['module_name'])],
+    packages=find_packages(exclude=['tests']),
 
     # Targeted OS
     platforms='any',
