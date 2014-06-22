@@ -93,13 +93,17 @@ SOFTWARE.
 # ==============================================================================
 
 __author__ = "Sean Wallitsch"
+__author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", "Ivan Busquets",]
 __license__ = "MIT"
 __version__ = "0.1"
 __maintainer__ = "Sean Wallitsch"
-__email__ = "sean@grenadehop.com"
+__maintainer_email__ = "sean@grenadehop.com"
+__module_name__ = "thorium"
+__short_desc__ = "Combines and manages many Nuke python packages"
 __status__ = "Development"
+__url__ = "https://github.com/ThoriumGroup/thorium"
 
 # ==============================================================================
 # EXPORTS
@@ -118,7 +122,6 @@ __all__ = [
 def _importer(module):
     """Imports and returns the given string as a module"""
     return __import__(module, globals())
-
 
 # ==============================================================================
 # CLASSES
