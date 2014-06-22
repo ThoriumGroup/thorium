@@ -17,7 +17,7 @@ submodules that are designed and still released to work independent of
 thorium. When thorium imports those modules, it imports them into the global
 namespace so that Nuke can access the modules directly, without having to go
 through the thorium namespace. It does this by directly accessing and importing
-straight into the __builtin__ namespace. This is normally not recommended.
+straight into the `__builtin__` namespace. This is normally not recommended.
 
 While every effort has been made to ensure that these submodules are named
 uniquely, the python namespace can get very tricky and managers of facility
