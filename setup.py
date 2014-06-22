@@ -58,7 +58,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 MAIN_FILE = os.path.join(HERE, 'thorium', '__init__.py')
 
 # Get the long description from the relevant file
-with codecs.open('README.md', encoding='utf-8') as readme_file:
+with codecs.open('README.rst', encoding='utf-8') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 # ==============================================================================

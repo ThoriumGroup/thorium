@@ -28,15 +28,15 @@ placing the 'thorium' folder in your .nuke directory or anywhere else within
 the Nuke python path.
 
 Then, add the following lines to your 'init.py' file:
-```
-import thorium
-thorium.run()
-```
+::
+    import thorium
+    thorium.run()
+
 And the following lines to your 'menu.py' file:
-```
-import thorium
-thorium.run_gui()
-```
+::
+    import thorium
+    thorium.run_gui()
+
 ## Usage
 
 After the run functions above have executed, each submodule will be available
