@@ -97,7 +97,7 @@ __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", "Ivan Busquets",]
 __license__ = "MIT"
-__version__ = "0.1"
+__version__ = "0.1b1"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
@@ -129,7 +129,7 @@ def _importer(module):
 
 
 class GlobalInjector(object):
-    """Inject into the global namespace of "__builtin__
+    """Inject into the global namespace of "__builtin__"
 
     Assigning to variables declared global in a function, injects them only
     into the module's global namespace.
@@ -152,10 +152,63 @@ class GlobalInjector(object):
     """
     def __init__(self):
         import sys
+        self.__dict__['modules'] = []
         self.__dict__['builtin'] = sys.modules['__builtin__'].__dict__
 
     def __setattr__(self, name, value):
+        """Adds an object to the __builtin__ namespace under name.
+
+        While this can be used to inject any object into the __builtin__
+        namespace, it's particularly useful for importing.
+
+        >>> global_namespace = GlobalInjector()
+        >>> global_namespace.random = __import__("random", globals())
+        >>> random.randint(0, 100)
+        67
+
+        `random` has now been imported into the global namespace. This works
+        even when global_namespace is within a local scope.
+
+        Args:
+            name : (str)
+                The variable name the module should be added under.
+
+            value : (<module>|any other object)
+                The python object to be referenced by name.
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         self.builtin[name] = value
+        self.modules.append(name)
+
+    def reset(self):
+        """ Removes the objects that GlobalInjector has placed in the namespace
+
+        Note that when used for imported modules, this does not reload, or
+        uncache the modules.
+
+        This is mostly useful for testing.
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
+        for module in self.modules:
+            if module in self.builtin:
+                del(self.builtin[module])
+
+        self.modules = []
 
 # ==============================================================================
 # PUBLIC FUNCTIONS
