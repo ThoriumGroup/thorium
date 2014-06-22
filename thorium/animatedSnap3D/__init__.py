@@ -61,7 +61,10 @@ SOFTWARE.
 # ==============================================================================
 
 # Nuke Imports
-import nuke
+try:
+    import nuke
+except ImportError:
+    pass
 
 # animatedSnap3D Imports
 from animatedSnap3D import animated_snap

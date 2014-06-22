@@ -43,8 +43,11 @@ SOFTWARE.
 # ==============================================================================
 
 # Nuke Imports
-import nuke
-from nukescripts import snap3d
+try:
+    import nuke
+    from nukescripts import snap3d
+except ImportError:
+    pass
 
 # ==============================================================================
 # EXPORTS

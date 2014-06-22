@@ -27,6 +27,9 @@ import thorium
 
 BUILTINS = dict(sys.modules['__builtin__'].__dict__)
 
+GUI_FALSE = {
+    'animatedSnap3D': False,
+}
 # =============================================================================
 # TEST CLASSES
 # =============================================================================
@@ -107,6 +110,39 @@ class testGlobalInjector(unittest.TestCase):
         self.assertTrue(
             'string' not in sys.modules['__builtin__'].__dict__
         )
+
+
+class testRunGui(unittest.TestCase):
+    """Tests the run_gui function"""
+
+    # =========================================================================
+    # TESTS
+    # =========================================================================
+
+    @mock.patch('thorium._importer')
+    def test_no_imports(self, mock_importer):
+        """Tests run_gui with no imports"""
+
+        thorium.run_gui(GUI_FALSE)
+
+        self.assertFalse(
+            mock_importer.called
+        )
+
+    # =========================================================================
+
+    @mock.patch('thorium._importer')
+    @mock.patch('thorium.animatedSnap3D.run')
+    def test_animated_snap_imported(self, mock_snap, mock_importer):
+        """Tests that animatedSnap3D is imported by default"""
+
+        gui_dict = dict(GUI_FALSE)
+        gui_dict['animatedSnap3D'] = True
+
+        thorium.run_gui(gui_dict)
+
+        mock_importer.assert_called_once_with('animatedSnap3D')
+        mock_snap.assert_called_once_with()
 
 # =============================================================================
 # RUNNER
