@@ -214,7 +214,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages.
-    packages=[metadata['module_name']],
+    packages=[str(metadata['module_name'])],
 
     # Targeted OS
     platforms='any',
