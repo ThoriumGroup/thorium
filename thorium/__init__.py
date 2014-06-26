@@ -39,6 +39,22 @@ And the following lines to your 'menu.py' file:
     import thorium
     thorium.run_gui()
 
+You can turn off the usage of specific modules by passing a dictionary with the
+module name and a bool.
+::
+    import thorium
+    thorium.run_gui({'animatedSnap3D': False})
+
+Now `animatedSnap3D` will not load, and every other module will. You can
+reverse this behavior by passing the `default` argument `False`, which will
+cause all modules not specifically listed as True to not be loaded.
+::
+    import thorium
+    thorium.run_gui({'animatedSnap3D': True}, default=False)
+
+Now `animatedSnap3D` will be the ONLY module that loads- all others will not
+load, since the default is False.
+
 ## Usage
 
 After the run functions above have executed, each submodule will be available
@@ -97,7 +113,7 @@ __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", "Ivan Busquets",]
 __license__ = "MIT"
-__version__ = "0.1b1"
+__version__ = "0.1b2"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
