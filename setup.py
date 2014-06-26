@@ -17,6 +17,8 @@ This setup.py script needs to modified in the following ways:
 - `setup` kwargs need to be modified:
     - `classifiers` needs to be modified to suit your project.
     - `keywords` needs to be modified to suit your project.
+- If you have files that need to be included (such as `LICENSE`, you need to
+    create a MANIFEST.in file and `include FILENAME` them.
 
 Other than that, all the metadata should live in your main file, just like
 the example below.
@@ -208,6 +210,12 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages.
     packages=find_packages(exclude=['tests']),
+
+    # If there are data files included in your packages that need to be
+    # installed, specify them here.  If using Python 2.6 or less, then these
+    # have to be included in MANIFEST.in as well.
+    package_data={},
+    include_package_data=True,
 
     # Targeted OS
     platforms='any',
