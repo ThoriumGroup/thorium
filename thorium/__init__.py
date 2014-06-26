@@ -236,3 +236,7 @@ def run_gui(modules=None, default=True):
     if modules.get('animatedSnap3D', default):
         global_namespace.animatedSnap3D = _importer('animatedSnap3D')
         animatedSnap3D.run()
+
+    if modules.get('cardToTrack', default):
+        global_namespace.cardToTrack = _importer('cardToTrack')
+        cardToTrack.run(menu='Thorium')
