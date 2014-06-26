@@ -56,9 +56,9 @@ SOFTWARE.
 
 """
 
-# ==============================================================================
+# =============================================================================
 # IMPORTS
-# ==============================================================================
+# =============================================================================
 
 # Nuke Imports
 try:
@@ -67,52 +67,68 @@ except ImportError:
     pass
 
 # animatedSnap3D Imports
-from animatedSnap3D import animated_snap
+from .animatedSnap3D import animated_snap
 
-# ==============================================================================
+# =============================================================================
 # GLOBALS
-# ==============================================================================
+# =============================================================================
 
 __author__ = "Ivan Busquets"
 __author_email__ = "ivanbusquets@gmail.com"
 __copyright__ = "Copyright 2011, Ivan Busquets"
 __credits__ = ["Ivan Busquets", "Sean Wallitsch", ]
 __license__ = "MIT"
-__version__ = "1.2b1"
+__version__ = "1.2b2"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "animatedSnap3D"
 __short_desc__ = "An extension to Nuke's 'snap' options for animated 3D objects"
 __status__ = "Development"
-__url__ = 'http://github.com/ThoriumGroup/animatedSnap3D'
+__url__ = "http://github.com/ThoriumGroup/animatedSnap3D"
 
-# ==============================================================================
+# =============================================================================
 # EXPORTS
-# ==============================================================================
+# =============================================================================
 
 __all__ = [
     'run',
     'animated_snap'
 ]
 
-# ==============================================================================
+# =============================================================================
 # PUBLIC FUNCTIONS
-# ==============================================================================
+# =============================================================================
 
 
 def run():
     """Add animatedSnap3D menu items under the Axis Menu"""
-    axis_menu = nuke.menu('Axis').findItem('Snap')
+    try:
+        axis_menu = nuke.menu('Axis').findItem('Snap')
+    except AttributeError:  # Could not find Axis menu
+        nuke.tprint(
+            "Could not find 'Axis' menu to append animatedSnap3D commands. "
+            "animatedSnap3D will not be available through menus."
+        )
+        return
+    else:
+        if not axis_menu:  # Found Axis, could not find Snap
+            nuke.tprint(
+                "Could not find 'Snap' item of sub-menu 'Axis' to append "
+                "animatedSnap3D commands. animatedSnap3D will not be available "
+                "through menus."
+            )
+            return
+
     axis_menu.addSeparator()
     axis_menu.addCommand(
-        'Match position - Animated',
-        'animatedSnap3D.animated_snap(["translate"])'
+        'Match animated selection position',
+        'animatedSnap3D.animated_snap()'
     )
     axis_menu.addCommand(
-        'Match position, orientation - Animated',
+        'Match animated selection position, orientation',
         'animatedSnap3D.animated_snap(["translate", "rotate"])'
     )
     axis_menu.addCommand(
-        'Match position, orientation, scale - Animated',
+        'Match animated selection position, orientation, size',
         'animatedSnap3D.animated_snap(["translate", "rotate", "scaling"])'
     )

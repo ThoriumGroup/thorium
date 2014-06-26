@@ -27,9 +27,6 @@ import thorium
 
 BUILTINS = dict(sys.modules['__builtin__'].__dict__)
 
-GUI_FALSE = {
-    'animatedSnap3D': False,
-}
 # =============================================================================
 # TEST CLASSES
 # =============================================================================
@@ -123,7 +120,7 @@ class testRunGui(unittest.TestCase):
     def test_no_imports(self, mock_importer):
         """Tests run_gui with no imports"""
 
-        thorium.run_gui(GUI_FALSE)
+        thorium.run_gui(default=False)
 
         self.assertFalse(
             mock_importer.called
@@ -133,16 +130,25 @@ class testRunGui(unittest.TestCase):
 
     @mock.patch('thorium._importer')
     @mock.patch('thorium.animatedSnap3D.run')
-    def test_animated_snap_imported(self, mock_snap, mock_importer):
+    def test_animated_snap_imported(self, mock_module, mock_importer):
         """Tests that animatedSnap3D is imported by default"""
 
-        gui_dict = dict(GUI_FALSE)
-        gui_dict['animatedSnap3D'] = True
-
-        thorium.run_gui(gui_dict)
+        thorium.run_gui({'animatedSnap3D': True}, default=False)
 
         mock_importer.assert_called_once_with('animatedSnap3D')
-        mock_snap.assert_called_once_with()
+        mock_module.assert_called_once_with()
+
+    # =========================================================================
+
+    @mock.patch('thorium._importer')
+    @mock.patch('thorium.cardToTrack.run')
+    def test_card_to_track_imported(self, mock_module, mock_importer):
+        """Tests that animatedSnap3D is imported by default"""
+
+        thorium.run_gui({'cardToTrack': True}, default=False)
+
+        mock_importer.assert_called_once_with('cardToTrack')
+        mock_module.assert_called_once_with(menu='Thorium')
 
 # =============================================================================
 # RUNNER

@@ -17,6 +17,8 @@ This setup.py script needs to modified in the following ways:
 - `setup` kwargs need to be modified:
     - `classifiers` needs to be modified to suit your project.
     - `keywords` needs to be modified to suit your project.
+- If you have files that need to be included (such as `LICENSE`, you need to
+    create a MANIFEST.in file and `include FILENAME` them.
 
 Other than that, all the metadata should live in your main file, just like
 the example below.
@@ -40,19 +42,12 @@ The following should be placed in your project module's __init__.py file:
 
 Note: At this time `credits` is unused.
 
-## Assumptions
-
-As this is a simplified setup.py script, it expects a relatively simple module.
-It assumes that your `module_name` is the same as the name of your package, and
-that there's only one. More complicated modules with multiple packages will
-have to modify this script more heavily.
-
 """
 # ==============================================================================
 # IMPORTS
 # ==============================================================================
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import codecs
 import os
 import re
@@ -65,7 +60,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 MAIN_FILE = os.path.join(HERE, 'thorium', '__init__.py')
 
 # Get the long description from the relevant file
-with codecs.open('README.md', encoding='utf-8') as readme_file:
+with codecs.open('README.rst', encoding='utf-8') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 # ==============================================================================
@@ -214,7 +209,13 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages.
-    packages=[str(metadata['module_name'])],
+    packages=find_packages(exclude=['tests']),
+
+    # If there are data files included in your packages that need to be
+    # installed, specify them here.  If using Python 2.6 or less, then these
+    # have to be included in MANIFEST.in as well.
+    package_data={},
+    include_package_data=True,
 
     # Targeted OS
     platforms='any',

@@ -39,6 +39,22 @@ And the following lines to your 'menu.py' file:
     import thorium
     thorium.run_gui()
 
+You can turn off the usage of specific modules by passing a dictionary with the
+module name and a bool.
+::
+    import thorium
+    thorium.run_gui({'animatedSnap3D': False})
+
+Now `animatedSnap3D` will not load, and every other module will. You can
+reverse this behavior by passing the `default` argument `False`, which will
+cause all modules not specifically listed as True to not be loaded.
+::
+    import thorium
+    thorium.run_gui({'animatedSnap3D': True}, default=False)
+
+Now `animatedSnap3D` will be the ONLY module that loads- all others will not
+load, since the default is False.
+
 ## Usage
 
 After the run functions above have executed, each submodule will be available
@@ -88,16 +104,16 @@ SOFTWARE.
 
 """
 
-# ==============================================================================
+# =============================================================================
 # GLOBALS
-# ==============================================================================
+# =============================================================================
 
 __author__ = "Sean Wallitsch"
 __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = ["Sean Wallitsch", "Ivan Busquets",]
 __license__ = "MIT"
-__version__ = "0.1b1"
+__version__ = "0.1b2"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
@@ -105,27 +121,27 @@ __short_desc__ = "Combines and manages many Nuke python packages"
 __status__ = "Development"
 __url__ = "https://github.com/ThoriumGroup/thorium"
 
-# ==============================================================================
+# =============================================================================
 # EXPORTS
-# ==============================================================================
+# =============================================================================
 
 __all__ = [
     'run',
     'run_gui'
 ]
 
-# ==============================================================================
+# =============================================================================
 # PRIVATE FUNCTIONS
-# ==============================================================================
+# =============================================================================
 
 
 def _importer(module):
     """Imports and returns the given string as a module"""
     return __import__(module, globals())
 
-# ==============================================================================
+# =============================================================================
 # CLASSES
-# ==============================================================================
+# =============================================================================
 
 
 class GlobalInjector(object):
@@ -210,12 +226,12 @@ class GlobalInjector(object):
 
         self.modules = []
 
-# ==============================================================================
+# =============================================================================
 # PUBLIC FUNCTIONS
-# ==============================================================================
+# =============================================================================
 
 
-def run(modules=None):
+def run(modules=None, default=True):
     """Imports and runs the submodules that must be available at all times"""
     global_namespace = GlobalInjector()
 
@@ -223,16 +239,20 @@ def run(modules=None):
         modules = {}
     pass
 
-# ==============================================================================
+# =============================================================================
 
 
-def run_gui(modules=None):
+def run_gui(modules=None, default=True):
     """Imports and runs gui only submodules"""
     global_namespace = GlobalInjector()
 
     if not modules:
         modules = {}
 
-    if modules.get('animatedSnap3D', True):
+    if modules.get('animatedSnap3D', default):
         global_namespace.animatedSnap3D = _importer('animatedSnap3D')
         animatedSnap3D.run()
+
+    if modules.get('cardToTrack', default):
+        global_namespace.cardToTrack = _importer('cardToTrack')
+        cardToTrack.run(menu='Thorium')
