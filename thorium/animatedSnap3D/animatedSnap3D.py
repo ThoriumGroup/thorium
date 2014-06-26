@@ -8,8 +8,9 @@ This submodule contains the functions needed to executed an animated snap.
 
 ## Public Functions
 
-    run()
-        Adds the animatedSnap3D functions to the Axis Snap Menu
+    animated_snap()
+        A wrapper to call the relevant snap functions within a frame
+        range loop.
 
 ## License
 
@@ -38,9 +39,9 @@ SOFTWARE.
 
 """
 
-# ==============================================================================
+# =============================================================================
 # IMPORTS
-# ==============================================================================
+# =============================================================================
 
 # Nuke Imports
 try:
@@ -49,15 +50,17 @@ try:
 except ImportError:
     pass
 
-# ==============================================================================
+# =============================================================================
 # EXPORTS
-# ==============================================================================
+# =============================================================================
 
-__all__ = []
+__all__ = [
+    'animated_snap'
+]
 
-# ==============================================================================
+# =============================================================================
 # PRIVATE FUNCTIONS
-# ==============================================================================
+# =============================================================================
 
 
 def _get_frange():
@@ -90,25 +93,59 @@ def _get_frange():
             nuke.message('Invalid frame range')
             return None
 
-# ==============================================================================
+# =============================================================================
+
+
+def _frange_percent(frame, frange):
+    """Determines what percent completion a task is based on frame and frange
+
+    Args:
+        frame : (int)
+            The frame to determine what percent complete we are.
+
+        frange: (<nuke.FrameRange>)
+            A nuke.FrameRange object with frange information.
+
+    Returns:
+        (int)
+            The percentage of completion.
+
+    Raises:
+        N/A
+
+    """
+    percent = (frame - frange.first()) / float(frange.framges())
+
+    return int(percent * 100)
+
+# =============================================================================
 # PUBLIC FUNCTIONS
-# ==============================================================================
+# =============================================================================
 
 
-def animated_snap(transforms, node=None, vertices=None):
+def animated_snap(transforms=None, node=None, vertices=None, frange=None):
     """A wrapper to call the relevant snap functions within a frame range loop
 
     Args:
-        transform : [str]
+        transforms=None : [str]
             A list of transforms to apply to the snapped object. Should be
             one or more of the following:
                 translate, rotate or scaling
 
+            Default: ['translate']
+
         node=None : (<nuke.Node>)
             The Nuke node to apply the transforms to.
 
+            Default: nuke.thisNode()
+
         vertices=None : [<nuke.Vertex>]
             The vertices to use to get the transformation.
+
+            Default: snap3d.getSelection()
+
+        frames=None : (<nuke.FrameRange>)
+            Provide a FrameRange object to suppress dialog.
 
     Returns:
         None
@@ -123,27 +160,36 @@ def animated_snap(transforms, node=None, vertices=None):
         node = nuke.thisNode()
     if not vertices:
         vertices = snap3d.getSelection()
+    if not transforms:
+        transforms = ['translate']
+
+    snap_func = snap3d.translateToPointsVerified
 
     knobs = list(transforms)
-    if 'translate' in knobs:
-        knobs.append('xform_order')
+    knobs.append('xform_order')
+
     if 'rotate' in knobs:
         knobs.append("rot_order")
+        snap_func = snap3d.translateRotateToPointsVerified
     if 'scaling' in knobs:
         min_verts = 3
-
-    temp = None
-
-    # Ask for a frame range
-    frames = _get_frange()
-
-    if not frames:
-        # Exit early if cancelled or empty frange
-        return
+        snap_func = snap3d.translateRotateScaleToPointsVerified
 
     # Verify valid selections before we enter the loop
-    snap3d.verifyNodeToSnap(node, knobs)
-    snap3d.verifyVertexSelection(vertices, min_verts)
+    try:
+        snap3d.verifyNodeToSnap(node, knobs)
+        snap3d.verifyVertexSelection(vertices, min_verts)
+    except ValueError as err:
+        nuke.message(err)
+        return
+
+    if not frange:
+        # Ask for a frame range
+        frange = _get_frange()
+
+    if not frange:
+        # Exit early if cancelled or empty frange
+        return
 
     # Add a CurveTool for the forced-evaluation hack
     temp = nuke.nodes.CurveTool()
@@ -164,9 +210,12 @@ def animated_snap(transforms, node=None, vertices=None):
     )
 
     # Loop through the framerange
-    for frame in frames:
+    for frame in frange:
         if task.isCancelled():
             break
+
+        progress = _frange_percent(frame, frange)
+        task.setProgress(progress)
 
         # Execute the CurveTool node to force evaluation of the tree
         nuke.execute(temp, frame, frame)
@@ -176,10 +225,23 @@ def animated_snap(transforms, node=None, vertices=None):
         vertices = snap3d.getSelection()
 
         # Checking vertex selection again in case topology has changed
-        snap3d.verifyVertexSelection(vertices, min_verts)
+        try:
+            snap3d.verifyVertexSelection(vertices, min_verts)
+        except ValueError:
+            nuke.message(
+                "Number of vertices selected has dropped below {verts}."
+                "This is most likely due to changes in geometry topology."
+                "\n"
+                "Please select new vertices and start again from frame "
+                "{frame} on.".format(
+                    verts=min_verts,
+                    frame=frame
+                )
+            )
+            break
+        else:
+            # Call the passed snap function from the nukescripts.snap3d module
+            snap_func(node, vertices)
 
-        # Call the passed snap function from the nukescripts.snap3d module
-        snap3d.translateToPointsVerified(node, vertices)
-
-        if temp:
-            nuke.delete(temp)
+    if temp:
+        nuke.delete(temp)
