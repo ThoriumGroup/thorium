@@ -215,7 +215,7 @@ class GlobalInjector(object):
 # =============================================================================
 
 
-def run(modules=None):
+def run(modules=None, default=True):
     """Imports and runs the submodules that must be available at all times"""
     global_namespace = GlobalInjector()
 
@@ -226,13 +226,13 @@ def run(modules=None):
 # =============================================================================
 
 
-def run_gui(modules=None):
+def run_gui(modules=None, default=True):
     """Imports and runs gui only submodules"""
     global_namespace = GlobalInjector()
 
     if not modules:
         modules = {}
 
-    if modules.get('animatedSnap3D', True):
+    if modules.get('animatedSnap3D', default):
         global_namespace.animatedSnap3D = _importer('animatedSnap3D')
         animatedSnap3D.run()
