@@ -111,9 +111,14 @@ SOFTWARE.
 __author__ = "Sean Wallitsch"
 __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
-__credits__ = ["Sean Wallitsch", "Ivan Busquets",]
+__credits__ = [
+    "Ivan Busquets",
+    "Alexey Kuchinski",
+    "Frank Rueter",
+    "Sean Wallitsch",
+]
 __license__ = "MIT"
-__version__ = "0.1b2"
+__version__ = "0.1b3"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
@@ -256,3 +261,7 @@ def run_gui(modules=None, default=True):
     if modules.get('cardToTrack', default):
         global_namespace.cardToTrack = _importer('cardToTrack')
         cardToTrack.run(menu='Thorium')
+
+    if modules.get('iconPanel', default):
+        global_namespace.iconPanel = _importer('iconPanel')
+        iconPanel.run()

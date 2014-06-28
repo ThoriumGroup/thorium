@@ -402,10 +402,9 @@ def card_to_track(card, camera, background):
             label=card_label
         )
 
-        # No longer need corner_pin
-        nuke.delete(corner_pin)
-
         if settings['output'] == "CornerPin(matrix)":
+            # No longer need corner_pin
+            nuke.delete(corner_pin)
             return corner_matrix
 
         roto = matrix_to_roto_matrix(
@@ -416,6 +415,8 @@ def card_to_track(card, camera, background):
         )
 
         if settings['output'] == "Roto":
+            # No longer need corner_pin
+            nuke.delete(corner_pin)
             nuke.delete(corner_matrix)
             return roto
 
@@ -613,8 +614,8 @@ def matrix_to_roto_matrix(matrix, frange, pos=None, label=None):
     """
     roto = nuke.nodes.Roto()
     if pos:
-        roto['xpos'].setValue(pos[0] + 150)
-        roto['ypos'].setValue(pos[1] + 60)
+        roto['xpos'].setValue(pos[0])
+        roto['ypos'].setValue(pos[1])
     if label:
         roto['label'].setValue(label)
 
@@ -622,13 +623,13 @@ def matrix_to_roto_matrix(matrix, frange, pos=None, label=None):
 
     for frame in frange:
 
-        matrix = [
+        matrices = [
             matrix['transform_matrix'].getValueAt(
                 frame, i
             ) for i in xrange(16)
         ]
 
-        for i, value in enumerate(matrix):
+        for i, value in enumerate(matrices):
             matrix_curve = transform.getExtraMatrixAnimCurve(0, i)
             matrix_curve.addKey(frame, value)
 
