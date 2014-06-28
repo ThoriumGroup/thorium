@@ -247,7 +247,7 @@ def run(modules=None, default=True):
 # =============================================================================
 
 
-def run_gui(modules=None, default=True):
+def run_gui(modules=None, default=True, menu_name='Thorium'):
     """Imports and runs gui only submodules"""
     global_namespace = GlobalInjector()
 
@@ -260,7 +260,7 @@ def run_gui(modules=None, default=True):
 
     if modules.get('cardToTrack', default):
         global_namespace.cardToTrack = _importer('cardToTrack')
-        cardToTrack.run(menu='Thorium')
+        cardToTrack.run(menu=menu_name)
 
     if modules.get('iconPanel', default):
         global_namespace.iconPanel = _importer('iconPanel')
