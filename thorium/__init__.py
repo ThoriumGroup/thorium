@@ -256,3 +256,7 @@ def run_gui(modules=None, default=True):
     if modules.get('cardToTrack', default):
         global_namespace.cardToTrack = _importer('cardToTrack')
         cardToTrack.run(menu='Thorium')
+
+    if modules.get('iconPanel', default):
+        global_namespace.iconPanel = _importer('iconPanel')
+        iconPanel.run()
