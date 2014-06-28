@@ -61,6 +61,22 @@ After the run functions above have executed, each submodule will be available
 in it's native namespace. Modules with menu items will appear in their correct
 place, and the python commands will be available for use from anywhere in Nuke.
 
+List of Modules
+---------------
+
+- animatedSnap3D
+    - An extension to Nuke's 'snap' options for animated 3D objects.
+    - https://github.com/ThoriumGroup/animatedSnap3D
+    - By Ivan Busquets
+- cardToTrack
+    - Converts a Nuke 3d card's corners to tracking points, corner pins or a matrix calculation for use on a corner pin or roto.
+    - https://github.com/ThoriumGroup/cardToTrack
+    - By Alexey Kuchinski
+- iconPanel
+    - A panel for Nuke that displays details for every icon.
+    - https://github.com/ThoriumGroup/iconPanel
+    - By Frank Rueter
+
 License
 -------
 
