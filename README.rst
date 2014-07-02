@@ -76,6 +76,10 @@ List of Modules
     - A panel for Nuke that displays details for every icon.
     - https://github.com/ThoriumGroup/iconPanel
     - By Frank Rueter
+- viewerSync
+    - Synchronizes two or more viewers in Nuke.
+    - https://github.com/ThoriumGroup/viewerSync
+    - By Philippe Huberdeau
 
 License
 -------
