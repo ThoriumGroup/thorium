@@ -113,12 +113,13 @@ __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = [
     "Ivan Busquets",
+    "Philippe Huberdeau",
     "Alexey Kuchinski",
     "Frank Rueter",
     "Sean Wallitsch",
 ]
 __license__ = "MIT"
-__version__ = "0.1b3"
+__version__ = "0.1b4"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
