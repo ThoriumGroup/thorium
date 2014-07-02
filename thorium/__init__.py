@@ -113,12 +113,13 @@ __author_email__ = "sean@grenadehop.com"
 __copyright__ = "Copyright 2014, Sean Wallitsch"
 __credits__ = [
     "Ivan Busquets",
+    "Philippe Huberdeau",
     "Alexey Kuchinski",
     "Frank Rueter",
     "Sean Wallitsch",
 ]
 __license__ = "MIT"
-__version__ = "0.1b3"
+__version__ = "0.1b4"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
@@ -247,7 +248,7 @@ def run(modules=None, default=True):
 # =============================================================================
 
 
-def run_gui(modules=None, default=True):
+def run_gui(modules=None, default=True, menu_name='Thorium'):
     """Imports and runs gui only submodules"""
     global_namespace = GlobalInjector()
 
@@ -260,8 +261,13 @@ def run_gui(modules=None, default=True):
 
     if modules.get('cardToTrack', default):
         global_namespace.cardToTrack = _importer('cardToTrack')
-        cardToTrack.run(menu='Thorium')
+        cardToTrack.run(menu=menu_name)
 
     if modules.get('iconPanel', default):
         global_namespace.iconPanel = _importer('iconPanel')
         iconPanel.run()
+
+    if modules.get('viewerSync', default)
+        global_namespace.viewerSync = _importer('viewerSync')
+        viewerSync.run()
+
