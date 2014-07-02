@@ -265,3 +265,8 @@ def run_gui(modules=None, default=True, menu_name='Thorium'):
     if modules.get('iconPanel', default):
         global_namespace.iconPanel = _importer('iconPanel')
         iconPanel.run()
+
+    if modules.get('viewerSync', default)
+        global_namespace.viewerSync = _importer('viewerSync')
+        viewerSync.run()
+
