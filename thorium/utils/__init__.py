@@ -1,5 +1,71 @@
+#!/usr/bin/env python
+"""
+
+Thorium Utils
+=============
+
+Generic utilities for Nuke included within the Thorium package.
+
+## Public Functions
+
+    allNodes()
+        Wraps nuke.allNodes to allow filtering and recursion. Note that this
+        name violates the style conventions to be a transparent replacement
+        for nuke.allNodes().
+
+## License
+
+The MIT License (MIT)
+
+Thorium
+Copyright (c) 2014 Sean Wallitsch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+"""
+
+# =============================================================================
+# IMPORTS
+# =============================================================================
+
+# Nuke Imports
+try:
+    import nuke
+    import nukescripts
+except ImportError:
+    pass
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    'allNodes'
+]
+
+# =============================================================================
+# PUBLIC FUNCTIONS
+# =============================================================================
+
+
 def allNodes(filter=None, group=nuke.root(), recurseGroups=False):
-    """ Wraps nuke.allNodes to allow filtering and recursing
+    """ Wraps nuke.allNodes to allow filtering and recursion.
 
     Args:
         filter=None : (str)
@@ -36,13 +102,12 @@ def allNodes(filter=None, group=nuke.root(), recurseGroups=False):
         # But we need to modify our list of keyword arguments and remove
         # the filter argument if it wasn't passed, otherwise Nuke chokes.
         kwargs = {
-            'filter': filter,
             'group': group,
             'recurseGroups': recurseGroups
         }
 
-        # Remove empty arguments
-        if not filter:
-            del kwargs['filter']
+        # Add filter argument if present
+        if filter:
+            kwargs['filter'] = filter
 
         return nuke.allNodes(**kwargs)

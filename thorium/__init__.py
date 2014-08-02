@@ -270,4 +270,3 @@ def run_gui(modules=None, default=True, menu_name='Thorium'):
     if modules.get('viewerSync', default):
         global_namespace.viewerSync = _importer('viewerSync')
         viewerSync.run()
-
