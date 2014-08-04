@@ -25,6 +25,10 @@ Generic utilities for Nuke node manipulation included within Thorium
         Connects a target node in between a source node and all of its
         dependents.
 
+    set_link()
+        Creates a Link_Knob between a source node & knob and places it on a
+        target node.
+
     space_x()
         Returns the x position needed to space a target node to the side of a
         source node.
@@ -80,6 +84,7 @@ __all__ = [
     'center_x',
     'center_y',
     'connect_inline',
+    'set_link',
     'space_x',
     'space_y',
 ]
@@ -247,6 +252,60 @@ def connect_inline(target, source):
                 if node.input(i) == source:
                     print "setting that input"
                     node.setInput(i, target)
+
+# =============================================================================
+
+
+def set_link(knob, target, source, name=None, label=None):
+    """Sets up a Link_Knob between a source node's knob and a target node.
+
+    Args:
+        knob : (str)
+            The name of the target knob to be linked.
+
+        source : <nuke.node>
+            The node the knob will be linked from.
+
+        target : <nuke.node>
+            The node where the link knob will be placed on.
+
+        name=None : (str)
+            If given, this label will override any name from the linked knob.
+
+        label=None : (str)
+            If given, this label will override any label from the linked
+            knob.
+
+    Returns:
+        (<nuke.Link_Knob>)
+            The created Link_Knob.
+
+    Raises:
+        N/A
+
+    """
+    name = name if name else source[knob].name()
+    label = label if label else source[knob].label()
+
+    link_kwargs = {
+        'name': name
+    }
+    if label:  # label could still be blank
+        link_kwargs['label'] = label
+
+    link_knob = nuke.Link_Knob(knob, **link_kwargs)
+
+    # Link the knob
+    link_knob.setLink(
+        '{node}.{knob}'.format(
+            node=source.fullName(),
+            knob=knob
+        )
+    )
+
+    target.addKnob(link_knob)
+
+    return link_knob
 
 # =============================================================================
 

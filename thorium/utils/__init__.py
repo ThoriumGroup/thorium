@@ -46,7 +46,7 @@ except ImportError:
 
 # Local Imports
 from .nodes import (allNodes, center_below, center_x, center_y,
-                    connect_inline, space_x, space_y)
+                    connect_inline, set_link, space_x, space_y)
 from .groupmo import Groupmo
 
 # =============================================================================
@@ -60,6 +60,7 @@ __all__ = [
     'center_y',
     'connect_inline',
     'Groupmo',
+    'set_link',
     'space_x',
     'space_y',
 ]
