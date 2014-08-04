@@ -267,6 +267,10 @@ def run_gui(modules=None, default=True, menu_name='Thorium'):
         global_namespace.iconPanel = _importer('iconPanel')
         iconPanel.run()
 
+    if modules.get('Keying', default):
+        global_namespace.keying = _importer('keying')
+        keying.run()
+
     if modules.get('viewerSync', default):
         global_namespace.viewerSync = _importer('viewerSync')
         viewerSync.run()

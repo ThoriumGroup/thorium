@@ -6,6 +6,11 @@ Thorium Keying
 
 Keying tools unique to the Thorium package
 
+## Public Functions
+
+    run()
+        Adds the Thorium keying tools to the menus.
+
 ## License
 
 The MIT License (MIT)
@@ -44,8 +49,26 @@ try:
 except ImportError:
     pass
 
+# Thorium Imports
+from .spillsuppress import SpillSuppress
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = []
+__all__ = [
+    'SpillSuppress'
+]
+
+# =============================================================================
+# PUBLIC FUNCTIONS
+# =============================================================================
+
+
+def run():
+    """Add the various keying tools to the correct menus"""
+    keying_menu = nuke.menu('Nodes').findItem('Keyer')
+    keying_menu.addCommand(
+        'SpillSuppress',
+        'keying.SpillSuppress()',
+    )
