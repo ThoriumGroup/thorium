@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
 
-Thorium Utils
-=============
+Thorium Keying
+==============
 
-Generic utilities for Nuke included within the Thorium package.
+Keying tools unique to the Thorium package
 
 ## License
 
@@ -44,22 +44,8 @@ try:
 except ImportError:
     pass
 
-# Local Imports
-from .nodes import (allNodes, center_below, center_x, center_y,
-                    connect_inline, space_x, space_y)
-from .groupmo import Groupmo
-
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = [
-    'allNodes',
-    'center_below',
-    'center_x',
-    'center_y',
-    'connect_inline',
-    'Groupmo',
-    'space_x',
-    'space_y',
-]
+__all__ = []
