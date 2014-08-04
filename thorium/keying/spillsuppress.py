@@ -51,7 +51,9 @@ except ImportError:
     pass
 
 # Thorium Imports
-from ..utils import center_below, center_x, center_y, Groupmo, space_x
+from ..utils import (
+    center_below, center_x, center_y, Groupmo, set_link, space_x
+)
 
 # =============================================================================
 # EXPORTS
@@ -71,6 +73,11 @@ class SpillSuppress(Groupmo):
     @classmethod
     def setup(cls, groupmo):
         """blah"""
+
+        # =====================================================================
+        # Nodes
+        # =====================================================================
+
         input_node = nuke.nodes.Input()
         dot = nuke.nodes.Dot(inputs=[input_node])
         center_below(dot, input_node, 100)
@@ -254,8 +261,8 @@ class SpillSuppress(Groupmo):
         # Now we need to add the knobs it's referencing to the AutoBalance
         # node.
         auto_balance.addKnob(nuke.tab_knob('spillcontrols', 'Spill Controls'))
-        auto_balance.addKnob(nuke.Color_Knob('source', 'Source Color'))
-        auto_balance.addKnob(nuke.Color_Knob('dest', 'Destination Color'))
+        auto_balance.addKnob(nuke.Color_Knob('source', 'source color'))
+        auto_balance.addKnob(nuke.Color_Knob('dest', 'destination color'))
         auto_balance['source'].setValue([0.1, 0.2, 0.3])
         auto_balance['dest'].setValue([0.3, 0.3, 0.3])
 
@@ -282,7 +289,7 @@ class SpillSuppress(Groupmo):
             name='AutoManualSwitch'
         )
         center_below(auto_switch, remove_negatives, 200)
-        auto_switch['which'].setExpression('parent.use_manual')
+        auto_switch['which'].setExpression('parent.useManual')
 
         blur = nuke.nodes.Blur(
             inputs=[auto_switch],
@@ -318,3 +325,33 @@ class SpillSuppress(Groupmo):
             inputs=[copy_channels],
         )
         center_below(output_node, copy_channels)
+
+        # =====================================================================
+        # Knobs
+        # =====================================================================
+
+        set_link('source', groupmo, auto_balance)
+
+        groupmo.addKnob(nuke.Text_Knob('source_divider', ''))
+
+        set_link('mix', groupmo, cross, label='channel mix')
+        use_max = nuke.Bool_Knob('useMax', 'use maximum for mix')
+        use_max.clearFlag(nuke.STARTLINE)
+        groupmo.addKnob(use_max)
+
+        gain = nuke.Float_Knob('gain', 'gain')
+        gamma = nuke.Float_Knob('gamma', 'gamma')
+        gamma.clearFlag(nuke.STARTLINE)
+        groupmo.addKnob(gain)
+        groupmo.addKnob(gamma)
+
+        set_link('size', groupmo, blur, label='blur spill')
+
+        groupmo.addKnob(nuke.Text_Knob('destination_divider', ''))
+
+        set_link('dest', groupmo, auto_balance)
+
+        groupmo.addKnob(nuke.Color_Knob('manual', 'manual balance'))
+        use_manual = nuke.Bool_Knob('useManual', 'use manual balancing')
+        use_manual.clearFlag(nuke.STARTLINE)
+        groupmo.addKnob(use_manual)
