@@ -68,7 +68,13 @@ __all__ = [
 
 
 class Groupmo(object):
-    """Groupmo"""
+    """Template for creating Gizmo-like Groups with Python.
+
+    A Groupmo is driven by the `__new__()` special method, and the normal
+    `setup()` method (blank here). `__new__()`
+
+
+    """
 
     Class = 'Groupmo'
 
@@ -102,7 +108,7 @@ class Groupmo(object):
         class_knob.setFlag(nuke.INVISIBLE)
 
         # Set our groupmo's name.
-        groupmo.setName(cls.Class.title())
+        groupmo.setName(cls.Class)
 
         # Call the setup function, which will be overriden by each Groupmo.
         groupmo.begin()
@@ -136,5 +142,4 @@ class Groupmo(object):
 
     @classmethod
     def setup(cls, groupmo):
-        nuke.nodes.Input()
-        nuke.nodes.Output()
+        pass
