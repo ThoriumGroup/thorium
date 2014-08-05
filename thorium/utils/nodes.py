@@ -25,6 +25,12 @@ Generic utilities for Nuke node manipulation included within Thorium
         Connects a target node in between a source node and all of its
         dependents.
 
+    node_height()
+        Returns a best guess at the provided node's screen height.
+
+    node_width()
+        Returns a best guess at the provided node's screen width.
+
     set_link()
         Creates a Link_Knob between a source node & knob and places it on a
         target node.
@@ -84,6 +90,8 @@ __all__ = [
     'center_x',
     'center_y',
     'connect_inline',
+    'node_height',
+    'node_width',
     'set_link',
     'space_x',
     'space_y',
@@ -166,8 +174,10 @@ def center_below(target, source, padding=6):
         N/A
 
     """
-    target.setXpos(center_x(target, source))
-    target.setYpos(space_y(source, padding))
+    target.setXYpos(
+        center_x(target, source),
+        space_y(source, padding)
+    )
 
 # =============================================================================
 
@@ -191,7 +201,7 @@ def center_x(target, source):
         N/A
 
     """
-    return source.xpos() - ((target.screenWidth() - source.screenWidth()) / 2)
+    return source.xpos() - ((node_width(target) - node_width(source)) / 2)
 
 # =============================================================================
 
@@ -215,9 +225,7 @@ def center_y(target, source):
         N/A
 
     """
-    return source.ypos() - (
-        (target.screenHeight() - source.screenHeight()) / 2
-    )
+    return source.ypos() - ((node_height(target) - node_height(source)) / 2)
 
 # =============================================================================
 
@@ -252,6 +260,60 @@ def connect_inline(target, source):
                 if node.input(i) == source:
                     print "setting that input"
                     node.setInput(i, target)
+
+# =============================================================================
+
+
+def node_height(node):
+    """Returns the best guess at the node's screen height.
+
+    Args:
+        node : (<nuke.Node>)
+            The node we want the height of.
+
+    Returns:
+        (int)
+            Returns the screen height of the provided node.
+
+    Raises:
+        N/A
+
+    """
+    height = node.screenHeight()
+
+    # In Nuke 7, a bug can prevent screenHeight() from reporting correctly.
+    # In that case, it will return as 0.
+    if not height:
+        height = 18 if node.Class() != 'Dot' else 12
+
+    return height
+
+# =============================================================================
+
+
+def node_width(node):
+    """Returns the best guess at the node's screen width.
+
+    Args:
+        node : (<nuke.Node>)
+            The node we want the width of.
+
+    Returns:
+        (int)
+            Returns the screen width of the provided node.
+
+    Raises:
+        N/A
+
+    """
+    width = node.screenWidth()
+
+    # In Nuke 7, a bug can prevent screenWidth() from reporting correctly.
+    # In that case, it will return as 0.
+    if not width:
+        width = 80 if node.Class() != 'Dot' else 12
+
+    return width
 
 # =============================================================================
 
@@ -298,7 +360,7 @@ def set_link(knob, target, source, name=None, label=None):
     # Link the knob
     link_knob.setLink(
         '{node}.{knob}'.format(
-            node=source.fullName(),
+            node=source.name(),
             knob=knob
         )
     )
@@ -334,7 +396,7 @@ def space_x(source, padding=80):
         N/A
 
     """
-    return source.screenWidth() + source.xpos() + padding
+    return node_width(source) + source.xpos() + padding
 
 # =============================================================================
 
@@ -362,4 +424,4 @@ def space_y(source, padding=6):
         N/A
 
     """
-    return source.screenHeight() + source.ypos() + padding
+    return node_height(source) + source.ypos() + padding
