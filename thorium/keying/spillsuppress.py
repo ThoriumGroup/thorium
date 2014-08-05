@@ -51,15 +51,15 @@ except ImportError:
     pass
 
 # Thorium Imports
-from ..utils import (
-    center_below, center_x, center_y, Groupmo, set_link, space_x
-)
+from ..utils import Groupmo, set_link
 
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = []
+__all__ = [
+    'SpillSuppress'
+]
 
 # =============================================================================
 # CLASSES
@@ -67,20 +67,69 @@ __all__ = []
 
 
 class SpillSuppress(Groupmo):
-    """Spill Suppression for the cultured class"""
+    """Spill Suppression that works by subtracting excess spill.
+
+    This is a raw method that gets very pleasant results. The spill
+    channel is compared to either the average or the maximum of the alternate
+    color channels.
+
+    Values above the average/maximum is determined to be spill. We can then
+    manipulate that spill amount to dial in the spill matte, eating in on edges
+    or treating them more gently, etc.
+
+    Then we balance that spill matte versus our desired result color, adding or
+    removing the spill matte values from the color channels of that spill matte
+    until we end up with a spill area that is of similar color to our desired
+    background.
+
+    Class Attributes:
+
+        Class
+            The name of the `Groupmo`: `SpillSuppress`
+
+    Public Methods:
+
+        setup()
+            Builds all the interior nodes of the SpillSuppress, then promotes
+            and creates the various control knobs.
+
+    """
     Class = 'SpillSuppress'
 
     @classmethod
     def setup(cls, groupmo):
-        """blah"""
+        """Builds all the interior nodes and knobs of SpillSuppress"""
 
         # =====================================================================
         # Nodes
         # =====================================================================
 
+        # Input ===============================================================
+
         input_node = nuke.nodes.Input()
-        dot = nuke.nodes.Dot(inputs=[input_node])
-        center_below(dot, input_node, 100)
+        dot = nuke.nodes.Dot(
+            inputs=[input_node],
+            xpos=input_node.xpos() + 40 - 6,
+            ypos=input_node.ypos() + 100
+        )
+
+        # Have to create some Constant nodes here to hold the
+        # color values for source and destination.
+        # This is due to a Nuke 8 bug on Linux.
+        source = nuke.nodes.Constant(
+            name='Source',
+            xpos=input_node.xpos() - 160,
+            ypos=input_node.ypos() - 20,
+        )
+        dest = nuke.nodes.Constant(
+            name='Dest',
+            xpos=input_node.xpos() + 160,
+            ypos=source.ypos()
+        )
+        source['color'].setValue([0.1, 0.2, 0.3, 1])
+        dest['color'].setValue([0.3, 0.3, 0.3, 1])
+
+        # Shuffles ============================================================
 
         def set_shuffle(shuffle, color):
             """Sets all the color channels of a shuffle to be the same color"""
@@ -92,81 +141,82 @@ class SpillSuppress(Groupmo):
         # Shuffle to extract the green channel
         green_shuffle = nuke.nodes.Shuffle(
             inputs=[dot],
-            name='Green'
+            name='Green',
+            xpos=input_node.xpos(),
+            ypos=dot.ypos() + 100
         )
-        center_below(green_shuffle, dot, 200)
         set_shuffle(green_shuffle, 'green')
 
         # Shuffle to extract the red channel
         red_shuffle = nuke.nodes.Shuffle(
             inputs=[dot],
-            name='Red'
-        )
-        red_shuffle.setXYpos(
-            green_shuffle.xpos() - 160,
-            green_shuffle.ypos()
+            name='Red',
+            xpos=green_shuffle.xpos() - 160,
+            ypos=green_shuffle.ypos()
         )
         set_shuffle(red_shuffle, 'red')
 
         # Shuffle to extract the blue channel
         blue_shuffle = nuke.nodes.Shuffle(
             inputs=[dot],
-            name='Blue'
+            name='Blue',
+            xpos=green_shuffle.xpos() + 160,
+            ypos=green_shuffle.ypos()
         )
-        blue_shuffle.setXYpos(
-            space_x(green_shuffle),
-            green_shuffle.ypos()
-        )
+        set_shuffle(blue_shuffle, 'blue')
 
         dot2 = nuke.nodes.Dot(
             inputs=[dot],
-        )
-        dot2.setXYpos(
-            space_x(blue_shuffle),
-            blue_shuffle.ypos()
+            xpos=blue_shuffle.xpos() + 160,
+            ypos=blue_shuffle.ypos() + 4,
         )
 
-        # Switch Nodes
+        # Color Switches ======================================================
+
         # This will autoswitch from green primary to blue primary, depending
         # on which color has a higher value.
         main_switch = nuke.nodes.Switch(
             inputs=[blue_shuffle, green_shuffle],
-            name='BGSwitch'
+            name='BGSwitch',
+            xpos=blue_shuffle.xpos(),
+            ypos=blue_shuffle.ypos() + 100
         )
-        center_below(main_switch, blue_shuffle, 100)
         # We set this to an expression which looks at the AutoBalance node.
         # Expression Reads:
         # If AutoBalance's Source Color Green channel minus the Blue channel is
         # greater than 0, value should be 1. Else, value should be 0.
         main_switch['which'].setExpression(
-            'AutoBalance.source.g-AutoBalance.source.b>0?1:0'
+            'Source.color.g - Source.color.b > 0 ? 1 : 0'
         )
 
         # Inverse Switch (will be the opposite of Main Switch)
         inverse_switch = nuke.nodes.Switch(
             inputs=[green_shuffle, blue_shuffle],
-            name='BGSwitchInverse'
+            name='BGSwitchInverse',
+            xpos=green_shuffle.xpos(),
+            ypos=green_shuffle.ypos() + 100
         )
-        center_below(inverse_switch, green_shuffle, 100)
+        inverse_switch['which'].setExpression(
+            'BGSwitch.which'
+        )
 
-        # Mix Nodes
+        # Channel Mixing ======================================================
+
         # These nodes will determine how the alternate color channels
         # (the color channels that are NOT the spill channel) are mixed
         # together to help determine how much of the spill channel is spill.
         cross = nuke.nodes.Merge2(
             inputs=[red_shuffle, inverse_switch],
-            name='Cross'
-        )
-        center_below(cross, red_shuffle, 200)
+            name='Cross',
+            xpos=red_shuffle.xpos(),
+            ypos=red_shuffle.ypos() + 200)
         cross['mix'].setValue(0.5)
 
         max = nuke.nodes.Merge2(
             inputs=[red_shuffle, inverse_switch],
-            name='Max'
-        )
-        max.setXYpos(
-            cross.xpos() - 160,
-            cross.ypos(),
+            name='Max',
+            xpos=cross.xpos() - 160,
+            ypos=cross.ypos(),
         )
         max['operation'].setValue('max')
 
@@ -174,59 +224,61 @@ class SpillSuppress(Groupmo):
         # use the Max method instead of Crossing between the two.
         mix_switch = nuke.nodes.Switch(
             inputs=[cross, max],
-            name='MaxOrCross'
+            name='MaxOrCross',
+            xpos=cross.xpos(),
+            ypos=cross.ypos() + 100
         )
-        center_below(mix_switch, max, 40)
         mix_switch['which'].setExpression('parent.useMax')
 
-        # Threshold Controls
+        # Spill Controls ======================================================
+
         # These control the ebb and flow of the spill mask.
         thresh_gamma = nuke.nodes.Gamma(
             inputs=[mix_switch],
-            name='ThresholdGamma'
+            name='ThresholdGamma',
+            xpos=mix_switch.xpos(),
+            ypos=mix_switch.ypos() + 26
         )
-        center_below(thresh_gamma, mix_switch)
         thresh_gamma['value'].setExpression('parent.gamma')
 
         thresh_gain = nuke.nodes.Multiply(
             inputs=[thresh_gamma],
-            name='ThresholdGain'
-        )
-        center_below(thresh_gain, thresh_gamma)
+            name='ThresholdGain',
+            xpos=thresh_gamma.xpos(),
+            ypos=thresh_gamma.ypos() + 38)
         thresh_gain['value'].setExpression('parent.gain')
 
-        # Spill Removal
+        # Spill Removal =======================================================
+
         # After the adjustments to the spill matte with gain and gamma, we
         # can now subtract the spill.
         subtract_spill = nuke.nodes.Merge2(
             inputs=[thresh_gain, main_switch],
-            name='SubtractSpill'
-        )
-        subtract_spill.setXYpos(
-            center_x(subtract_spill, main_switch),
-            center_y(subtract_spill, thresh_gain)
+            name='SubtractSpill',
+            xpos=main_switch.xpos(),
+            ypos=thresh_gain.ypos() + 6,
         )
         subtract_spill['operation'].setValue('minus')
 
         remove_negatives = nuke.nodes.Expression(
             inputs=[subtract_spill],
-            name='RemoveNegatives'
+            name='RemoveNegatives',
+            xpos=subtract_spill.xpos(),
+            ypos=subtract_spill.ypos() + 26
         )
-        center_below(remove_negatives, subtract_spill)
         remove_negatives['expr0'].setValue('r>0?r:0')
         remove_negatives['expr1'].setValue('g>0?g:0')
         remove_negatives['expr2'].setValue('b>0?b:0')
 
-        # Balancing
+        # Balancing ===========================================================
+
         # These nodes, by way of adding or removing spill channel, determine
         # the resultant color balance of the shot.
         auto_balance = nuke.nodes.Expression(
             inputs=[remove_negatives],
-            name='AutoBalance'
-        )
-        auto_balance.setXYpos(
-            center_x(auto_balance, remove_negatives) - 180,
-            remove_negatives.ypos() + 100
+            name='AutoBalance',
+            xpos=remove_negatives.xpos() - 80,
+            ypos=remove_negatives.ypos() + 100
         )
 
         # We'll be using these variables in the channel calculations
@@ -237,111 +289,120 @@ class SpillSuppress(Groupmo):
         # color will look like.
         auto_balance['temp_name0'].setValue('bspill')
         auto_balance['temp_expr0'].setValue(
-            'source.b - pow(source.r * (1 - Cross.mix) '
-            '+ source.g * Cross.mix, 1 / (ThresholdGamma.value '
+            'Source.color.b - pow(Source.color.r * (1 - Cross.mix) '
+            '+ Source.color.g * Cross.mix, 1 / (ThresholdGamma.value '
             '+ 0.000001) ) * ThresholdGain.value'
         )
         auto_balance['temp_name1'].setValue('gspill')
         auto_balance['temp_expr1'].setValue(
-            'source.g - pow(source.r * (1 - Cross.mix) '
-            '+ source.b * Cross.mix, 1 / (ThresholdGamma.value '
+            'Source.color.g - pow(Source.color.r * (1 - Cross.mix) '
+            '+ Source.color.b * Cross.mix, 1 / (ThresholdGamma.value '
             '+ 0.000001) ) * ThresholdGain.value'
         )
         # This expression simply compares the two colors to determine which
         # spill calculation to use, then we'll that below.
         auto_balance['temp_name2'].setValue('spill')
         auto_balance['temp_expr2'].setValue(
-            'source.g-source.b>0?gspill:bspill'
+            'Source.color.g - Source.color.b > 0 ? gspill : bspill'
         )
 
-        auto_balance['expr0'].setValue('r * (dest.r - source.r) / spill')
-        auto_balance['expr1'].setValue('g * (dest.g - source.g) / spill')
-        auto_balance['expr2'].setValue('b * (dest.b - source.b) / spill')
+        auto_balance['expr0'].setValue(
+            'r * (Dest.color.r - Source.color.r) / spill'
+        )
+        auto_balance['expr1'].setValue(
+            'g * (Dest.color.g - Source.color.g) / spill'
+        )
+        auto_balance['expr2'].setValue(
+            'b * (Dest.color.b - Source.color.b) / spill'
+        )
 
         # Now we need to add the knobs it's referencing to the AutoBalance
         # node.
-        auto_balance.addKnob(nuke.tab_knob('spillcontrols', 'Spill Controls'))
-        auto_balance.addKnob(nuke.Color_Knob('source', 'source color'))
-        auto_balance.addKnob(nuke.Color_Knob('dest', 'destination color'))
-        auto_balance['source'].setValue([0.1, 0.2, 0.3])
-        auto_balance['dest'].setValue([0.3, 0.3, 0.3])
+        auto_balance.addKnob(nuke.Tab_Knob('spillcontrols', 'Spill Controls'))
 
         # Manual Balancing
-        # Much easier.
         manual_balance = nuke.nodes.Multiply(
             inputs=[remove_negatives],
             name='ManualBalance',
-            channels='rgb'
-        )
-        manual_balance.setXYpos(
-            center_x(manual_balance, remove_negatives + 100),
-            remove_negatives.ypos() + 100
+            channels='rgb',
+            xpos=remove_negatives.xpos() + 80,
+            ypos=auto_balance.ypos(),
         )
         # We need to set the values to trigger the channels to split.
         manual_balance['value'].setValue([0.1, 0.1, 0.1, 1])
         # But now we can set their expressions
-        manual_balance['value'].setExpression('parent.manual.r', 0)
-        manual_balance['value'].setExpression('parent.manual.g', 1)
-        manual_balance['value'].setExpression('parent.manual.b', 2)
+        manual_balance['value'].setExpression('Dest.color.r', 0)
+        manual_balance['value'].setExpression('Dest.color.g', 1)
+        manual_balance['value'].setExpression('Dest.color.b', 2)
 
         auto_switch = nuke.nodes.Switch(
             inputs=[auto_balance, manual_balance],
-            name='AutoManualSwitch'
+            name='AutoManualSwitch',
+            xpos=remove_negatives.xpos(),
+            ypos=remove_negatives.ypos() + 200
         )
-        center_below(auto_switch, remove_negatives, 200)
         auto_switch['which'].setExpression('parent.useManual')
 
         blur = nuke.nodes.Blur(
             inputs=[auto_switch],
             name='BlurSpill',
+            xpos=auto_switch.xpos(),
+            ypos=auto_switch.ypos() + 26
         )
-        center_below(blur, auto_switch)
 
         dot3 = nuke.nodes.Dot(
-            inputs=[dot2]
-        )
-        dot3.setXYpos(
-            dot2.xpos(),
-            blur.ypos()
+            inputs=[dot2],
+            xpos=dot2.xpos(),
+            ypos=blur.ypos() + 42,
         )
 
         remove_spill = nuke.nodes.Merge2(
             inputs=[dot3, blur],
-            name='RemoveSpill'
+            name='RemoveSpill',
+            xpos=blur.xpos(),
+            ypos=blur.ypos() + 38,
         )
-        center_below(remove_spill, blur, 50)
         remove_spill['operation'].setValue('plus')
+
+        # Output ==============================================================
 
         copy_channels = nuke.nodes.Copy(
             inputs=[dot3, remove_spill],
-            name='ProtectAll'
+            name='ProtectAll',
+            xpos=remove_spill.xpos(),
+            ypos=remove_spill.ypos() + 100
         )
-        copy_channels['from_0'].setValue('rgba.red')
-        copy_channels['from_1'].setValue('rgba.green')
-        copy_channels['from_2'].setValue('rgba.blue')
-        center_below(copy_channels, remove_spill, 100)
+        copy_channels['from0'].setValue('rgba.red')
+        copy_channels['from1'].setValue('rgba.green')
+        copy_channels['from2'].setValue('rgba.blue')
+        copy_channels['to0'].setValue('rgba.red')
+        copy_channels['to1'].setValue('rgba.green')
+        copy_channels['to2'].setValue('rgba.blue')
 
-        output_node = nuke.nodes.Output(
+        nuke.nodes.Output(
             inputs=[copy_channels],
+            xpos=copy_channels.xpos(),
+            ypos=copy_channels.ypos() + 100
         )
-        center_below(output_node, copy_channels)
 
         # =====================================================================
         # Knobs
         # =====================================================================
 
-        set_link('source', groupmo, auto_balance)
+        set_link('color', groupmo, source, name='source', label='source color')
 
         groupmo.addKnob(nuke.Text_Knob('source_divider', ''))
 
         set_link('mix', groupmo, cross, label='channel mix')
-        use_max = nuke.Bool_Knob('useMax', 'use maximum for mix')
+        use_max = nuke.Boolean_Knob('useMax', 'use maximum for mix')
         use_max.clearFlag(nuke.STARTLINE)
         groupmo.addKnob(use_max)
 
-        gain = nuke.Float_Knob('gain', 'gain')
-        gamma = nuke.Float_Knob('gamma', 'gamma')
+        gain = nuke.Array_Knob('gain', 'gain')
+        gamma = nuke.Array_Knob('gamma', 'gamma')
         gamma.clearFlag(nuke.STARTLINE)
+        gain.setValue(0.95)
+        gamma.setValue(0.95)
         groupmo.addKnob(gain)
         groupmo.addKnob(gamma)
 
@@ -349,9 +410,7 @@ class SpillSuppress(Groupmo):
 
         groupmo.addKnob(nuke.Text_Knob('destination_divider', ''))
 
-        set_link('dest', groupmo, auto_balance)
-
-        groupmo.addKnob(nuke.Color_Knob('manual', 'manual balance'))
-        use_manual = nuke.Bool_Knob('useManual', 'use manual balancing')
+        set_link('color', groupmo, dest, name='dest', label='destination color')
+        use_manual = nuke.Boolean_Knob('useManual', 'use for manual balancing')
         use_manual.clearFlag(nuke.STARTLINE)
         groupmo.addKnob(use_manual)
