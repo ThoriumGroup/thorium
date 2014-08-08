@@ -349,13 +349,11 @@ def set_link(knob, target, source, name=None, label=None):
     name = name if name else source[knob].name()
     label = label if label else source[knob].label()
 
-    link_kwargs = {
-        'name': name
-    }
+    link_args = [name]
     if label:  # label could still be blank
-        link_kwargs['label'] = label
+        link_args.append(label)
 
-    link_knob = nuke.Link_Knob(knob, **link_kwargs)
+    link_knob = nuke.Link_Knob(*link_args)
 
     # Link the knob
     link_knob.setLink(
