@@ -51,7 +51,7 @@ except ImportError:
     pass
 
 # Thorium Imports
-from ..utils import flags, Groupmo, set_link
+from ..utils import flags, Groupmo, normalize_docstring, set_link
 
 # =============================================================================
 # EXPORTS
@@ -73,7 +73,7 @@ class SpillSuppress(Groupmo):
     channel is compared to either the average or the maximum of the alternate
     color channels.
 
-    Values above the average/maximum is determined to be spill. We can then
+    Values above the average/maximum are determined to be spill. We can then
     manipulate that spill amount to dial in the spill matte, eating in on edges
     or treating them more gently, etc.
 
@@ -81,6 +81,31 @@ class SpillSuppress(Groupmo):
     removing the spill matte values from the color channels of that spill matte
     until we end up with a spill area that is of similar color to our desired
     background.
+
+    Usage:
+
+    Select 'Source Color' from the color of the key, not skin tones.
+
+    Select 'Destination Color' from the background of the image the
+    keyed element will go in front of in the composite.
+
+    If colored edges are still visible on the element, try adjusting the
+    'channel mix' value, or even using a maximum operation instead of an
+    average.
+
+    Adjusting gain and gamma will affect the spill threshold- which determines
+    exactly what is considered spill. Adjusting the gain down increases the
+    amount of the image that is considered spill, which has a large effect in
+    bright areas.
+
+    If the spill correction looks grainy, adding a small amount of blur with
+    the 'blur spill' control can help smooth it out. If the spill correction
+    looks incredibly grainy and blurring does little to help, the 'Destination
+    Color' is probably too intense. Try brightening or darkening the desired
+    'Destination Color.'
+
+    If desired, the 'Destination Color' can be used as a manual balancing tool
+    by checking the 'use for manual balancing' checkbox.
 
     Class Attributes:
 
@@ -98,6 +123,11 @@ class SpillSuppress(Groupmo):
 
     """
     Class = 'SpillSuppress'
+    help = normalize_docstring(
+        __doc__,
+        'Class Attributes',
+        'From <b>Thorium</b> by Sean Wallitsch'
+    )
 
     # =========================================================================
     # Public Methods
