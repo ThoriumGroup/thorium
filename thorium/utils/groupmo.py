@@ -120,6 +120,20 @@ class Groupmo(object):
 
             This attribute should be overridden by all subclasses.
 
+            Default: 'Groupmo'
+
+        help : (str)
+            The help string that will be displayed when the user hovers over
+            the help icon in the upper right hand corner of the Groupmo's
+            parameter panel.
+
+            This should describe general usage about the node.
+
+            Default: "Python constructed Groupmo, which is meant to function
+            similarly to a Gizmo. This is otherwise a normal Nuke Group, which
+            acts a nesting container for a set of nodes. Hit 'show' to see the
+            internal structure"
+
     Class Methods:
 
         setup()
@@ -146,6 +160,12 @@ class Groupmo(object):
     """
 
     Class = 'Groupmo'
+    help = (
+        "Python constructed Groupmo, which is meant to function "
+        "similarly to a Gizmo. This is otherwise a normal Nuke Group, which "
+        "acts a nesting container for a set of nodes. Hit 'show' to see the "
+        "internal structure"
+    )
 
     def __new__(cls, *args, **kwargs):
         """Constructs a Groupmo and returns the node.
@@ -168,6 +188,9 @@ class Groupmo(object):
 
         """
         padding = kwargs.pop('padding', None)
+
+        if 'help' not in kwargs:
+            kwargs['help'] = cls.help
 
         # Grab our selected node if there is one.
         try:
