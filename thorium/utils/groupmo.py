@@ -175,6 +175,10 @@ class Groupmo(object):
         "internal structure"
     )
 
+    # =========================================================================
+    # SPECIAL METHODS
+    # =========================================================================
+
     def __new__(cls, *args, **kwargs):
         """Constructs a Groupmo and returns the node.
 
@@ -257,6 +261,10 @@ class Groupmo(object):
         groupmo['selected'].setValue(True)
 
         return groupmo
+
+    # =========================================================================
+    # PUBLIC METHODS
+    # =========================================================================
 
     @classmethod
     def setup(cls, groupmo):
