@@ -71,15 +71,102 @@ class Groupmo(object):
     """Template for creating Gizmo-like Groups with Python.
 
     A Groupmo is driven by the `__new__()` special method, and the normal
-    `setup()` method (blank here). `__new__()`
+    `setup()` method (just a pass here). `__new__()` will return an instance
+    of `nuke.nodes.Group()` instead of `Groupmo` or it's subclasses.
 
+    `__new__()` will do the following:
+
+        * Create the Group node, passing all arguments and keyword arguments
+            given.
+        * Add a Tab named the same as the `cls.Class` variable value.
+        * Add an invisible knob named `groupmo_class` to the Group with the
+            `cls.Class` value.
+        * Sets the name of the group to the `cls.Class` value.
+        * Executes the `setup()` method:
+            * Before execution, we run `Group.begin()` which dumps us
+                inside of the Group. Any nodes added will be added inside of
+                group.
+            * After execution, we run `Group.end()`, closing the Group.
+            * `setup()` requires & passes one argument- the
+                `nuke.nodes.Group()` instance.
+        * If after `setup()` the Groupmo has an input, that input is connected
+            to the currently selected node (if any).
+        * If after `setup()` the Groupmo has an output, that output is
+            connected to all the nodes formally dependent on the selected node.
+        * If a node is currently selected, the Groupmo is placed below it, the
+            amount of padding can be controlled by passing a `padding` keyword
+            argument when creating the `Groupmo`. This `padding` kwarg will not
+            be passed through to the creation of the Group.
+        * If a node is currently selected, that node is de-selected, leaving
+            only the newly created Groupmo selected.
+
+    Class Attributes:
+
+        Class : (str)
+            The `Class` of the Groupmo, within the context of Nuke. In Nuke,
+            every node has a `Class`. Blur nodes are the Blur class, modern
+            merge nodes are the `Merge2` class. The class name can be used to
+            find certain types of nodes with `nuke.allNodes()`.
+
+            The Class name on a Groupmo node is used to name the group, add
+            a parameters tab named the same as the Class name, and creates an
+            invisible text knob on the Groupmo that contains the Class name.
+
+            That invisible knob is used by Thorium's `allNodes()` function to
+            enable Groupmos to behave like native Nuke nodes. If you had a
+            `SpillSuppress` Groupmo, you could get all instances of that
+            Groupmo in your current script by running
+            `utils.allNodes('SpillSuppress')`
+
+            This attribute should be overridden by all subclasses.
+
+    Class Methods:
+
+        setup()
+            This method is the one that should be overridden by the subclasses
+            of Groupmo. Replace this method with the nodes that will make up
+            the Groupmo.
+
+            Any nodes added within `setup()` will be added inside of the
+            Groupmo. Any knobs added within `setup()` will be added to the
+            tab named after the `Class` attribute. Additional tabs can be
+            created as normal.
+
+            For Groupmo's that have an input and an output, `setup()` would
+            start with the instancing of a `nuke.nodes.Input()` and end with
+            the instancing of a `nuke.nodes.Output()`.
+
+            This is also the place to add parameter knobs.
+
+            `setup()` needs to accept an argument that takes the created
+            `nuke.nodes.Group()` instance, which is the Groupmo. This is so
+            you can add knobs to Groupmo, which requires that you have access
+            to the Groupmo instance.
 
     """
 
     Class = 'Groupmo'
 
     def __new__(cls, *args, **kwargs):
-        """New Stuff"""
+        """Constructs a Groupmo and returns the node.
+
+        Args:
+            All args and keyword args will be passed to the creation of the
+            Nuke Group with the exception of:
+
+            padding : (int)
+                The amount of spacing between any currently selected node
+                and the newly created Groupmo, if the Groupmo has inputs.
+
+        Returns:
+            (<nuke.nodes.Group>)
+                Note that this does NOT return an instance of `Groupmo`. We
+                instead return the nuke node.
+
+        Raises:
+            N/A
+
+        """
         padding = kwargs.pop('padding', None)
 
         # Grab our selected node if there is one.
@@ -142,4 +229,20 @@ class Groupmo(object):
 
     @classmethod
     def setup(cls, groupmo):
+        """Creates all nodes and promotes all knobs for the Groupmo
+
+        When subclassing `Groupmo`, this method must be overridden and filled
+        with content.
+
+        Args:
+            groupmo : (<nuke.nodes.Group>)
+                The Group node which we're creating the Groupmo on.
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        """
         pass
