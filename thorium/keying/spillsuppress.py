@@ -51,7 +51,7 @@ except ImportError:
     pass
 
 # Thorium Imports
-from ..utils import Groupmo, set_link
+from ..utils import flags, Groupmo, set_link
 
 # =============================================================================
 # EXPORTS
@@ -89,12 +89,32 @@ class SpillSuppress(Groupmo):
 
     Public Methods:
 
+        disable_channel_mix_callback()
+            Sets the `chanMix` knob to be the opposite of the `useMax` knob.
+
         setup()
             Builds all the interior nodes of the SpillSuppress, then promotes
             and creates the various control knobs.
 
     """
     Class = 'SpillSuppress'
+
+    # =========================================================================
+    # Public Methods
+    # =========================================================================
+
+    @staticmethod
+    def disable_channel_mix_callback():
+        """Disables the channel mix average float if `useMax` is checked"""
+        # Stop any knob except `useMax` from triggering
+        if nuke.thisKnob().name() != 'useMax':
+            return
+        else:
+            node = nuke.thisNode()
+            useMax = node['useMax']
+            node['chanMix'].setEnabled(not useMax.value())
+
+    # =========================================================================
 
     @classmethod
     def setup(cls, groupmo):
@@ -112,22 +132,6 @@ class SpillSuppress(Groupmo):
             xpos=input_node.xpos() + 40 - 6,
             ypos=input_node.ypos() + 100
         )
-
-        # Have to create some Constant nodes here to hold the
-        # color values for source and destination.
-        # This is due to a Nuke 8 bug on Linux.
-        source = nuke.nodes.Constant(
-            name='Source',
-            xpos=input_node.xpos() - 160,
-            ypos=input_node.ypos() - 20,
-        )
-        dest = nuke.nodes.Constant(
-            name='Dest',
-            xpos=input_node.xpos() + 160,
-            ypos=source.ypos()
-        )
-        source['color'].setValue([0.1, 0.2, 0.3, 1])
-        dest['color'].setValue([0.3, 0.3, 0.3, 1])
 
         # Shuffles ============================================================
 
@@ -186,7 +190,7 @@ class SpillSuppress(Groupmo):
         # If AutoBalance's Source Color Green channel minus the Blue channel is
         # greater than 0, value should be 1. Else, value should be 0.
         main_switch['which'].setExpression(
-            'Source.color.g - Source.color.b > 0 ? 1 : 0'
+            'AutoBalance.source.g - AutoBalance.source.b > 0 ? 1 : 0'
         )
 
         # Inverse Switch (will be the opposite of Main Switch)
@@ -210,7 +214,17 @@ class SpillSuppress(Groupmo):
             name='Cross',
             xpos=red_shuffle.xpos(),
             ypos=red_shuffle.ypos() + 200)
-        cross['mix'].setValue(0.5)
+        cross.addKnob(nuke.Array_Knob('chanMix', 'channel mix'))
+        cross['chanMix'].setValue(0.5)
+        cross['chanMix'].setTooltip(
+            "Adjust the weighted average of the alternate color channels. 0 "
+            "is always the full red channel, 1 is either the blue or green "
+            "channel. If the spill color is blue, 1 is the green channel and "
+            "vice versa."
+        )
+        cross['chanMix'].setFlag(flags.SLIDER)
+        cross['chanMix'].setFlag(flags.FORCE_RANGE)
+        cross['mix'].setExpression('chanMix')
 
         max = nuke.nodes.Merge2(
             inputs=[red_shuffle, inverse_switch],
@@ -289,36 +303,57 @@ class SpillSuppress(Groupmo):
         # color will look like.
         auto_balance['temp_name0'].setValue('bspill')
         auto_balance['temp_expr0'].setValue(
-            'Source.color.b - pow(Source.color.r * (1 - Cross.mix) '
-            '+ Source.color.g * Cross.mix, 1 / (ThresholdGamma.value '
+            'source.b - pow(source.r * (1 - Cross.mix) '
+            '+ source.g * Cross.mix, 1 / (ThresholdGamma.value '
             '+ 0.000001) ) * ThresholdGain.value'
         )
         auto_balance['temp_name1'].setValue('gspill')
         auto_balance['temp_expr1'].setValue(
-            'Source.color.g - pow(Source.color.r * (1 - Cross.mix) '
-            '+ Source.color.b * Cross.mix, 1 / (ThresholdGamma.value '
+            'source.g - pow(source.r * (1 - Cross.mix) '
+            '+ source.b * Cross.mix, 1 / (ThresholdGamma.value '
             '+ 0.000001) ) * ThresholdGain.value'
         )
         # This expression simply compares the two colors to determine which
         # spill calculation to use, then we'll that below.
         auto_balance['temp_name2'].setValue('spill')
         auto_balance['temp_expr2'].setValue(
-            'Source.color.g - Source.color.b > 0 ? gspill : bspill'
+            'source.g - source.b > 0 ? gspill : bspill'
         )
 
         auto_balance['expr0'].setValue(
-            'r * (Dest.color.r - Source.color.r) / spill'
+            'r * (dest.r - source.r) / spill'
         )
         auto_balance['expr1'].setValue(
-            'g * (Dest.color.g - Source.color.g) / spill'
+            'g * (dest.g - source.g) / spill'
         )
         auto_balance['expr2'].setValue(
-            'b * (Dest.color.b - Source.color.b) / spill'
+            'b * (dest.b - source.b) / spill'
         )
 
         # Now we need to add the knobs it's referencing to the AutoBalance
         # node.
         auto_balance.addKnob(nuke.Tab_Knob('spillcontrols', 'Spill Controls'))
+        auto_balance.addKnob(nuke.Color_Knob('source', 'Source Color'))
+        auto_balance.addKnob(nuke.Color_Knob('dest', 'Destination Color'))
+        auto_balance['source'].setValue([0.1, 0.2, 0.3])
+        auto_balance['dest'].setValue([0.3, 0.3, 0.3])
+
+        # Auto Balancing Tooltips
+        auto_balance['source'].setTooltip(
+            "Color of spill to remove. This color will be used to determine if "
+            "the screen color is blue or green, based on which color channel"
+            "has a higher value."
+        )
+        auto_balance['dest'].setTooltip(
+            "Color to change the spill color to. This should be a sampled "
+            "average of the background behind your character. This color is "
+            "normally not the neutral grey most spill suppression corrects to. "
+            "Spill suppression should not only suppress the spill color, but "
+            "transform the spill and reflected spill to reflect the "
+            "environment. This will lead to better edges and color. "
+            "Extremely bright or dark values will break. Adjust values until "
+            "result is no longer 'grainy.'"
+        )
 
         # Manual Balancing
         manual_balance = nuke.nodes.Multiply(
@@ -331,9 +366,9 @@ class SpillSuppress(Groupmo):
         # We need to set the values to trigger the channels to split.
         manual_balance['value'].setValue([0.1, 0.1, 0.1, 1])
         # But now we can set their expressions
-        manual_balance['value'].setExpression('Dest.color.r', 0)
-        manual_balance['value'].setExpression('Dest.color.g', 1)
-        manual_balance['value'].setExpression('Dest.color.b', 2)
+        manual_balance['value'].setExpression('AutoBalance.dest.r', 0)
+        manual_balance['value'].setExpression('AutoBalance.dest.g', 1)
+        manual_balance['value'].setExpression('AutoBalance.dest.b', 2)
 
         auto_switch = nuke.nodes.Switch(
             inputs=[auto_balance, manual_balance],
@@ -389,13 +424,17 @@ class SpillSuppress(Groupmo):
         # Knobs
         # =====================================================================
 
-        set_link('color', groupmo, source, name='source', label='source color')
+        set_link('source', groupmo, auto_balance)
 
         groupmo.addKnob(nuke.Text_Knob('source_divider', ''))
 
-        set_link('mix', groupmo, cross, label='channel mix')
+        set_link('chanMix', groupmo, cross)
         use_max = nuke.Boolean_Knob('useMax', 'use maximum for mix')
         use_max.clearFlag(nuke.STARTLINE)
+        use_max.setTooltip(
+            "Instead of averaging the alternate color channels, use a max "
+            "operation to combine them."
+        )
         groupmo.addKnob(use_max)
 
         gain = nuke.Array_Knob('gain', 'gain')
@@ -403,6 +442,18 @@ class SpillSuppress(Groupmo):
         gamma.clearFlag(nuke.STARTLINE)
         gain.setValue(0.95)
         gamma.setValue(0.95)
+        gain.setFlag(flags.SLIDER)
+        gain.setFlag(flags.LOG_SLIDER)
+        gamma.setFlag(flags.SLIDER)
+        gamma.setFlag(flags.LOG_SLIDER)
+        gain.setTooltip(
+            "Multiples the spill matte to increase or decrease the total spill "
+            "removed."
+        )
+        gamma.setTooltip(
+            "Does a gamma operation on the spill matte to eat away or harden "
+            "the edges."
+        )
         groupmo.addKnob(gain)
         groupmo.addKnob(gamma)
 
@@ -410,7 +461,19 @@ class SpillSuppress(Groupmo):
 
         groupmo.addKnob(nuke.Text_Knob('destination_divider', ''))
 
-        set_link('color', groupmo, dest, name='dest', label='destination color')
+        set_link('dest', groupmo, auto_balance)
         use_manual = nuke.Boolean_Knob('useManual', 'use for manual balancing')
         use_manual.clearFlag(nuke.STARTLINE)
+        use_manual.setTooltip(
+            "If selected, the Destination Color will instead become a manual "
+            "gain control for the final result."
+        )
         groupmo.addKnob(use_manual)
+
+        # =====================================================================
+        # Callbacks
+        # =====================================================================
+
+        groupmo['knobChanged'].setValue(
+            'keying.SpillSuppress.disable_channel_mix_callback()'
+        )
