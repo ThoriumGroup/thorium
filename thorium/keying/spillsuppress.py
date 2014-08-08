@@ -477,12 +477,12 @@ class SpillSuppress(Groupmo):
         gamma.setFlag(flags.SLIDER)
         gamma.setFlag(flags.LOG_SLIDER)
         gain.setTooltip(
-            "Multiples the spill matte to increase or decrease the total spill "
-            "removed."
+            "Multiples the spill threshold to increase or decrease what gets "
+            "considered spill. Has a larger effect on brighter areas."
         )
         gamma.setTooltip(
-            "Does a gamma operation on the spill matte to eat away or harden "
-            "the edges."
+            "Does a gamma operation on the spill threshold, which has a "
+            "larger effect on midtones."
         )
         groupmo.addKnob(gain)
         groupmo.addKnob(gamma)
