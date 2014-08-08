@@ -13,6 +13,13 @@ the Nuke script.
     Groupmo
         A Group that functions like a Gizmo.
 
+## Public Functions
+
+    normalize_docstring()
+        Takes a docstring and removes all tabs and single newlines. Will
+        also split along a given split text, and bold the first line or any
+        lines that end in ':'.
+
 ## License
 
 The MIT License (MIT)
@@ -59,7 +66,8 @@ from .nodes import center_below, center_y, connect_inline, space_x
 # =============================================================================
 
 __all__ = [
-    'Groupmo'
+    'Groupmo',
+    'normalize_docstring'
 ]
 
 # =============================================================================
@@ -269,3 +277,62 @@ class Groupmo(object):
 
         """
         pass
+
+# =============================================================================
+# PUBLIC FUNCTIONS
+# =============================================================================
+
+
+def normalize_docstring(docstring, split_text=None, append=None, bold=True):
+    """Removes tabs and single newlines from a docstring, splits given text
+
+    Args:
+        docstring : (str)
+            The docstring to modify.
+
+        split_text=None : (str)
+            Splits the docstring along the given string and takes the first
+            result. Use this to cut off argument listing.
+
+        append=None : (str)
+            Text to append at the end of the pruned docstring.
+
+        bold=True : (bool)
+            If True, bolds the first line of the given text and any line that
+            ends with ':'.
+
+    Returns:
+        (str)
+            Returns docstring as a string with only double newlines
+            preserves, and all tabs and 4 white spaces removed.
+
+    Raises:
+        N/A
+
+    """
+    if split_text:
+        doc = docstring.split(split_text)[0]
+
+    if bold:
+        doc_lines = doc.split('\n')
+        # We want to BOLD the first line and any line that ends with ':'
+        for i in xrange(len(doc_lines)):
+            if not i or doc_lines[i].endswith(':'):
+                doc_lines[i] = '<b>{line}</b>'.format(
+                    line=doc_lines[i]
+                )
+        doc = '\n'.join(doc_lines)
+
+    # This should probably be regex, but the double newlines make regex a
+    # pain due to poor look-behind support, so we'll just use replace
+    # with the hack that we change the double newlines to a random string.
+    doc = doc.replace('\t', '')
+    doc = doc.replace('    ', '')
+    doc = doc.replace('\n\n', 'DOUBLENEWLINE')
+    doc = doc.replace('\n', ' ')
+    doc = doc.replace('DOUBLENEWLINE', '\n\n')
+
+    if append:
+        doc += append
+
+    return doc

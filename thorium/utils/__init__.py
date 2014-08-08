@@ -49,7 +49,7 @@ from . import flags
 from .nodes import (allNodes, center_below, center_x, center_y,
                     connect_inline, node_height, node_width,
                     set_link, space_x, space_y)
-from .groupmo import Groupmo
+from .groupmo import Groupmo, normalize_docstring
 
 # =============================================================================
 # EXPORTS
@@ -65,6 +65,7 @@ __all__ = [
     'Groupmo',
     'node_height',
     'node_width',
+    'normalize_docstring',
     'set_link',
     'space_x',
     'space_y',
