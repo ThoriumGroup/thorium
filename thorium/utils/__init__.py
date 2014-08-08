@@ -4,7 +4,7 @@
 Thorium Utils
 =============
 
-Generic utilities for Nuke included within the Thorium package.
+Useful python utilities for Nuke included within the Thorium package.
 
 ## License
 
@@ -45,6 +45,7 @@ except ImportError:
     pass
 
 # Local Imports
+from . import flags
 from .nodes import (allNodes, center_below, center_x, center_y,
                     connect_inline, node_height, node_width,
                     set_link, space_x, space_y)
@@ -60,6 +61,7 @@ __all__ = [
     'center_x',
     'center_y',
     'connect_inline',
+    'flags',
     'Groupmo',
     'node_height',
     'node_width',
