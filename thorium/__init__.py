@@ -119,7 +119,7 @@ __credits__ = [
     "Sean Wallitsch",
 ]
 __license__ = "MIT"
-__version__ = "0.1b4"
+__version__ = "0.1b5"
 __maintainer__ = "Sean Wallitsch"
 __maintainer_email__ = "sean@grenadehop.com"
 __module_name__ = "thorium"
