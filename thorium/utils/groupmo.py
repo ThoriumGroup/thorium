@@ -59,7 +59,7 @@ except ImportError:
     pass
 
 # Thorium Imports
-from .nodes import center_below, center_y, connect_inline, space_x
+from .nodes import center_below, center_y, connect_inline, set_link, space_x
 
 # =============================================================================
 # EXPORTS
@@ -228,9 +228,11 @@ class Groupmo(object):
             cls.Class
         )
         class_knob.setFlag(nuke.INVISIBLE)
+        groupmo.addKnob(class_knob)
 
-        # Set our groupmo's name.
-        groupmo.setName(cls.Class)
+        if 'name' not in kwargs:
+            # Set our groupmo's name.
+            groupmo.setName(cls.Class)
 
         # Call the setup function, which will be overriden by each Groupmo.
         groupmo.begin()
@@ -244,17 +246,19 @@ class Groupmo(object):
             if padding:
                 center_args.append(padding)
 
-            center_below(*center_args)
+            if 'xpos' not in kwargs and 'ypos' not in kwargs:
+                center_below(*center_args)
+
             connect_inline(groupmo, selected)
 
         elif selected:
             space_args = [selected, padding] if padding else [selected]
-            groupmo.setXYpos(
-                space_x(*space_args), center_y(groupmo, selected)
-            )
+            if 'xpos' not in kwargs and 'ypos' not in kwargs:
+                groupmo.setXYpos(
+                    space_x(*space_args), center_y(groupmo, selected)
+                )
 
         if selected:
-            print 'time to deselect'
             for node in nuke.selectedNodes():
                 node['selected'].setValue(False)
 
@@ -285,6 +289,111 @@ class Groupmo(object):
 
         """
         pass
+
+
+class MaskMix(Groupmo):
+    """Atomic node for applying a mask and mixing an effect.
+
+    This node emulates the common functions found at the top and bottom
+    of most Nuke nodes- allowing users to choose what channels to affect,
+    if the effect should be limited to a mask area, and what the mix level
+    should be between the original and the effect.
+
+    Usage:
+
+    Primary intended to be used within other nodes, """
+
+    Class = 'MaskMix'
+    help = "Does masking and mixing yo."
+
+    @classmethod
+    def setup(cls, groupmo):
+
+        # =====================================================================
+        # Nodes
+        # =====================================================================
+
+        # Input ===============================================================
+
+        effect_input = nuke.nodes.Input(
+            name='effect'
+        )
+        bg_input = nuke.nodes.Input(
+            name='background',
+            xpos=effect_input.xpos() - 480,
+            ypos=effect_input.ypos()
+        )
+        mask_input = nuke.nodes.Input(
+            name='mask',
+            xpos=effect_input.xpos() + 400,
+            ypos=effect_input.ypos()
+        )
+        mask_dot = nuke.nodes.Dot(
+            inputs=[mask_input],
+            xpos=mask_input.xpos() + 34,
+            ypos=mask_input.ypos() + 216,
+        )
+
+        # Layer Select ========================================================
+
+        copy = nuke.nodes.Copy(
+            inputs=[mask_dot, effect_input],
+            name='EffectChannels',
+            xpos=effect_input.xpos(),
+            ypos=effect_input.ypos() + 200
+        )
+        copy['from0'].setValue('none')
+        copy['to0'].setValue('none')
+        copy['channels'].setValue('rgba')
+
+        # Mask ================================================================
+
+        invert = nuke.nodes.Invert(
+            inputs=[mask_dot],
+            xpos=mask_dot.xpos() - 34,
+            ypos=mask_dot.ypos() + 200,
+        )
+        keymix = nuke.nodes.Keymix(
+            inputs=[copy, mask_dot, invert],
+            xpos=copy.xpos(),
+            ypos=invert.ypos()
+        )
+        keymix['maskChannel'].setValue('none')
+
+        bg_dot = nuke.nodes.Dot(
+            inputs=[bg_input],
+            xpos=bg_input.xpos() + 34,
+            ypos=invert.ypos() + 200,
+        )
+
+        # Mix =================================================================
+
+        dissolve = nuke.nodes.Dissolve(
+            inputs=[bg_dot, keymix],
+            xpos=keymix.xpos(),
+            ypos=bg_dot.ypos() - 10,
+        )
+        dissolve['which'].setValue(1)
+
+        # Output ==============================================================
+
+        nuke.nodes.Output(
+            inputs=[dissolve],
+            xpos=dissolve.xpos(),
+            ypos=dissolve.ypos() + 200
+        )
+
+        # =====================================================================
+        # Knobs
+        # =====================================================================
+
+        set_link('channels', groupmo, copy, label='channels')
+
+        groupmo.addKnob(nuke.Text_Knob('channelDiv', ''))
+
+        set_link('maskChannel', groupmo, keymix, label='mask')
+        set_link('invertMask', groupmo, keymix, startline=False)
+        set_link('which', groupmo, dissolve, label='mix')
 
 # =============================================================================
 # PUBLIC FUNCTIONS

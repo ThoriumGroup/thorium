@@ -318,7 +318,7 @@ def node_width(node):
 # =============================================================================
 
 
-def set_link(knob, target, source, name=None, label=None):
+def set_link(knob, target, source, name=None, label=None, startline=True):
     """Sets up a Link_Knob between a source node's knob and a target node.
 
     Args:
@@ -337,6 +337,10 @@ def set_link(knob, target, source, name=None, label=None):
         label=None : (str)
             If given, this label will override any label from the linked
             knob.
+
+        startline=True : (bool)
+            If True, the Link_Knob will start a new line. This is Nuke's
+            default. If False, we'll clear the STARTLINE flag.
 
     Returns:
         (<nuke.Link_Knob>)
@@ -362,6 +366,9 @@ def set_link(knob, target, source, name=None, label=None):
             knob=knob
         )
     )
+
+    if not startline:
+        link_knob.clearFlag(nuke.STARTLINE)
 
     target.addKnob(link_knob)
 
