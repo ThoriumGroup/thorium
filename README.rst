@@ -61,8 +61,8 @@ After the run functions above have executed, each submodule will be available
 in it's native namespace. Modules with menu items will appear in their correct
 place, and the python commands will be available for use from anywhere in Nuke.
 
-List of Modules
----------------
+List of 3rd Party Modules
+-------------------------
 
 - animatedSnap3D
     - An extension to Nuke's 'snap' options for animated 3D objects.
@@ -80,6 +80,16 @@ List of Modules
     - Synchronizes two or more viewers in Nuke.
     - https://github.com/ThoriumGroup/viewerSync
     - By Philippe Huberdeau
+
+List of Thorium Modules
+-----------------------
+
+- keying
+    - Various keying tools unique to Thorium, such as EdgeColor, SoftKey and SpillSuppress
+    - By Sean Wallitsch & Chris Kenny
+- utils
+    - Generic Nuke python utilities, used to help construct the Thorium package. Includes `Groupmo` for building gizmo-like groups with python.
+    - By Sean Wallitsch
 
 License
 -------

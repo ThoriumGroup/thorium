@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 """
 
-Thorium Utils
-=============
+Thorium Keying
+==============
 
-Useful python utilities for Nuke included within the Thorium package.
+Keying tools unique to the Thorium package
+
+## Public Functions
+
+    run()
+        Adds the Thorium keying tools to the menus.
 
 ## License
 
@@ -44,29 +49,26 @@ try:
 except ImportError:
     pass
 
-# Local Imports
-from . import flags
-from .nodes import (allNodes, center_below, center_x, center_y,
-                    connect_inline, node_height, node_width,
-                    set_link, space_x, space_y)
-from .groupmo import Groupmo, normalize_docstring
+# Thorium Imports
+from .spillsuppress import SpillSuppress
 
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
-    'allNodes',
-    'center_below',
-    'center_x',
-    'center_y',
-    'connect_inline',
-    'flags',
-    'Groupmo',
-    'node_height',
-    'node_width',
-    'normalize_docstring',
-    'set_link',
-    'space_x',
-    'space_y',
+    'SpillSuppress'
 ]
+
+# =============================================================================
+# PUBLIC FUNCTIONS
+# =============================================================================
+
+
+def run():
+    """Add the various keying tools to the correct menus"""
+    keying_menu = nuke.menu('Nodes').findItem('Keyer')
+    keying_menu.addCommand(
+        'SpillSuppress',
+        'keying.SpillSuppress()',
+    )
